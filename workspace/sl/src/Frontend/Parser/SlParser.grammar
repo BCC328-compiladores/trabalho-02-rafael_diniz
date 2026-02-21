@@ -1,0 +1,100 @@
+%right '='
+%left '||'
+%left '&&'
+%nonassoc '==' '!='
+%nonassoc '<' '>' '<=' '>='
+%left '+' '-'
+%left '*' '/' '%'
+%right '!'
+%left '.' '[' ']' '(' ')'
+
+Sl
+  : Stmts
+
+Stmts
+  : Stmt Stmts
+  | {- empty -}
+
+Stmt
+  : 'let' var ':' Type '=' Exp ';'
+  | 'let' var ':' Type ';'
+  | 'func' var '(' Params ')' '{' Stmts '}'
+  | 'func' var '(' Params ')' ':' Type '{' Stmts '}'
+  | 'struct' var '{' StructFields '}'
+  | 'if' '(' Exp ')' '{' Stmts '}' 'else' '{' Stmts '}'
+  | 'if' '(' Exp ')' '{' Stmts '}'
+  | 'while' '(' Exp ')' '{' Stmts '}'
+  | 'return' Exp ';'
+  | 'return' ';'
+  | 'print' '(' Exp ')' ';'
+  | Exp ';'
+
+Params
+  : Param ',' Params
+  | Param
+  | {- empty -}
+
+Param
+  : var ':' Type
+  | var
+
+StructFields
+  : StructField ';' StructFields
+  | {- empty -}
+
+StructField
+  : var ':' Type
+
+Args
+  : Exp ',' Args
+  | Exp
+  | {- empty -}
+
+Type
+  : 'int'
+  | 'float'
+  | 'bool'
+  | 'string'
+  | 'void'
+  | var
+  | var '[' intLit ']'
+
+Exp
+  : BinaryExp
+
+BinaryExp
+  : UnaryExp
+  | BinaryExp '=' BinaryExp
+  | BinaryExp '==' BinaryExp
+  | BinaryExp '!=' BinaryExp
+  | BinaryExp '<' BinaryExp
+  | BinaryExp '>' BinaryExp
+  | BinaryExp '<=' BinaryExp
+  | BinaryExp '>=' BinaryExp
+  | BinaryExp '&&' BinaryExp
+  | BinaryExp '||' BinaryExp
+  | BinaryExp '+' BinaryExp
+  | BinaryExp '-' BinaryExp
+  | BinaryExp '*' BinaryExp
+  | BinaryExp '/' BinaryExp
+  | BinaryExp '%' BinaryExp
+
+UnaryExp
+  : PrimaryExp
+  | '!' UnaryExp
+
+PrimaryExp
+  : AtomExp
+  | PrimaryExp '[' Exp ']'
+  | PrimaryExp '.' var
+
+AtomExp
+  : intLit
+  | floatLit
+  | stringLit
+  | 'true'
+  | 'false'
+  | var
+  | var '(' Args ')'
+  | var '{' Args '}'
+  | '(' Exp ')'

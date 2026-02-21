@@ -40,61 +40,231 @@
 
 \title{Relatório de Projeto: Compilador SL}
 \author{
-    Nome do Aluno \\
-    Matrícula: \\
-    BCC328 - Construção de Compiladores I - DECOM/UFOP
+    Rafael Diniz \\
+    Matrícula: rafael.do@aluno.ufop.edu.br \\
+    BCC328 - Construção de Compiladores I - DECOM/UFOP \\
+    20 de Fevereiro de 2026
 }
-\date{\today}
+\date{\year}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
+Apenas o TP1 foi implementado, com as funções --lexer e --parser.
+O analizador léxico não reconhece forall, então apenas os testes de 1 a 5 devem funcionar.
+
+Este relatório apresenta o desenvolvimento de um compilador para a linguagem SL (Simple Language) implementado em Haskell. O projeto inclui a análise léxica utilizando Alex, definição de estruturas sintáticas, sistema de tipos básicos e utilitários para manipulação de valores. O compilador está sendo desenvolvido de forma modular, seguindo boas práticas de engenharia de software e utilizando ferramentas padrão do ecossistema Haskell.
 \end{abstract}
 
 \tableofcontents
 
 \section{Introdução}
 
-\section{Metodologia}
+O projeto SL (Simple Language) consiste na implementação de um compilador para uma linguagem de programação simples, desenvolvido como trabalho prático da disciplina BCC328 - Construção de Compiladores I. A linguagem SL suporta tipos básicos (inteiros, booleanos, strings e ponto flutuante), declarações de variáveis, estruturas de controle condicionais e iterativas, além de operações aritméticas e lógicas.
+
+O compilador foi implementado em Haskell, aproveitando as vantagens da programação funcional para construção de compiladores, incluindo casamento de padrões, tipos algébricos e sistema de tipos robusto. O projeto utiliza ferramentas padrão do ecossistema Haskell, como Alex para geração do analisador léxico e Cabal para gerenciamento de dependências.
 
 \subsection{Estrutura sintática de SL}
 
+A linguagem SL foi projetada com uma sintaxe simples mas expressiva. A gramática inclui:
+
+\begin{itemize}
+\item \textbf{Tipos básicos}: \texttt{int}, \texttt{float}, \texttt{bool}, \texttt{string}
+\item \textbf{Declarações}: declarações de variáveis com palavra-chave \texttt{let}
+\item \textbf{Expressões}: aritméticas, lógicas, relacionais e de atribuição
+\item \textbf{Comandos}: atribuição, leitura, impressão, condicionais e iteração
+\end{itemize}
+
+A árvore de sintaxe abstrata foi definida no módulo \texttt{Sl.Frontend.Syntax.SlSyntax} utilizando tipos algébricos de Haskell, proporcionando representação natural e type-safe das construções da linguagem.
+
 \subsection{Sistema de tipos para SL}
 
-\subsection{Inferência de tipos para SL}
-
-\subsection{Semântica operacional para SL}
-
+O sistema de tipos implementado suporta:
+\begin{itemize}
+\item Tipos primitivos: inteiros, booleanos, strings e números de ponto flutuante
+\item Verificação de tipos em operações aritméticas e lógicas
+\item Tratamento de erros de tipo através de mônadas
+\end{itemize}
 
 \section{Arquitetura do Compilador}
 
+O compilador foi estruturado em módulos bem definidos, seguindo a arquitetura clássica de compiladores:
+
 \subsection{Análise léxica}
+
+A análise léxica foi implementada utilizando Alex, gerador de analisadores léxicos para Haskell. O arquivo \texttt{SlLexer.x} define as regras lexicais da linguagem SL.
+
+\subsubsection{Tokens implementados}
+
+Os seguintes grupos de tokens foram definidos:
+
+\begin{lstlisting}[language=Haskell, caption=Definição de tokens]
+data Lexeme
+    = TLet | TAssign | TAttribution | TIdent { out :: String } 
+    | TLParen | TRParen | TSemi | TComma | TFunc   | TStruct
+    | TIf | TElse | TWhile | TReturn | TLBrace | TRBrace 
+    | TLBracket | TRBracket  | TPrint | TRead | TDot
+    -- type tokens
+    | TInt | TFloat | TBool | TVoid | TString          
+    -- literal tokens
+    | LitInt Int | LitFloat Double | TTrue | TFalse
+    | LitString { out :: String }
+    -- operators tokens
+    | TPlus | TMinus | TTimes | TDiv | TMod
+    -- relational operators tokens
+    | TNot | TEq | TNeq | TLt | TGt | TLeq | TGeq | TAnd | TOr
+     -- end of file token
+    | TEOF
+    deriving (Eq, Ord, Show)
+\end{lstlisting}
+
+\subsubsection{Características do analisador léxico}
+
+\begin{itemize}
+\item \textbf{Comentários}: Suporte a comentários de linha (\texttt{//}) e comentários de bloco (\texttt{/* */})
+\item \textbf{Estados}: Implementação de estados para reconhecimento de declarações de variáveis e comentários
+\item \textbf{Literais}: Reconhecimento de literais inteiros, float, strings e booleanos
+\item \textbf{Operadores}: Conjunto completo de operadores aritméticos, lógicos e relacionais
+\item \textbf{Tratamento de erros}: Detecção de tokens inválidos e comentários não fechados
+\end{itemize}
+
+\subsubsection{Estados do lexer}
+
+O analisador utiliza três estados principais:
+\begin{itemize}
+\item Estado inicial (0): reconhecimento de tokens gerais
+\item \texttt{state\_string}: para reconheciomento de literais de string.
+\item \texttt{comment\_state}: para comentários de bloco
+\end{itemize}
+
+\subsubsection{Desafios}
+    O reconhecimento de strings foi feito inicialmente por um padrão regex, mas ao realizar os testes este método se demonstrou bem limitado. Então busquei na internet alguma solução já implementada utilizando o wrapper monadUserState do Alex. Nessa busca encontrei o seguinte projeto, do qual utilizei a parte do código que faz reconhecimento das strings:
+    
+    \href{https://github.com/haskell/alex/blob/master/examples/tiger.x}{https://github.com/haskell/alex/blob/master/examples/tiger.x}
+
+\subsubsection{Utilização de LLM}
+    Para esta parte houve muito pouca utilização de Large Language Models, o uso ficou bastante restrito a correção de de código, a maior parte do desenvolvimento foi feito tomando como base código existentes e documentação das ferramentas.
 
 \subsection{Análise sintática}
 
-\subsection{Árvore de sintaxe abstrata}
+O parser foi implementado no arquivo SlParser.y usando o gerador Happy
 
-\subsection{Análise semântica}
+\subsubsection{Precedência e Associatividade}
 
-\subsection{Geração de código}
+O parser define claramente a precedência dos operadores (do menor ao maior):
 
+\begin{lstlisting}[language=Haskell, caption=Precedência e Associatividade]
+%right         '='           -- atribuição (associativa à direita)
+%left          '||'          -- ou lógico
+%left          '&&'          -- e lógico  
+%nonassoc      '==' '!='     -- igualdade (não associativo)
+%nonassoc      '<' '>' '<=' '>='  -- relacionais
+%left          '+' '-'       -- adição/subtração
+%left          '*' '/' '%'   -- multiplicação/divisão/módulo
+%right         '!'           -- negação
+%left          '.' '[' ']' '(' ')'  -- acesso/chamada
+\end{lstlisting}
+
+\subsubsection{Árvore de sintaxe abstrata}
+
+A AST foi implementada no módulo \texttt{Sl.Frontend.Syntax.SlSyntax}
+
+\subsubsection{Ajuda de mecanismos de IA}
+Para começar o trabalho usei o código da Linguagem While disponível no material da disciplina, aqui houve muito auxílio de sugestão de código para adequar o código que já existia ao trabalho atual.
+
+Até conseguir uma versão que funcionasse do Parser, não houve nenhum uso de LLM onde eu inseri um input pedindo por ajuda. Essa versão contava com 28 conflitos de shift/reduce e um conflito de reduce/reduce
+
+Para resolver os conflitos utilizei recorri ao Claude Sonnet 4, os conflitos foram resolvidos atualizando as declarações de precedência, dividindo as expressões, que estavam todas definidas em Exp, em uma estrutura hierárquica
+
+\begin{lstlisting}[language=Haskell, caption=Estrutura Hierárquica de Expressões]
+Exp : BinaryExp                    { $1 }
+
+BinaryExp : 
+       UnaryExp                    { $1 }
+     | BinaryExp '=' BinaryExp     { EAssign $1 $3 }
+     | BinaryExp '==' BinaryExp    { $1 :=: $3 }
+     | BinaryExp '!=' BinaryExp    { $1 :/=: $3 }
+     | BinaryExp '<' BinaryExp     { $1 :<: $3 }
+     | BinaryExp '>' BinaryExp     { $1 :>: $3 }
+     | BinaryExp '<=' BinaryExp    { $1 :<=: $3 }
+     | BinaryExp '>=' BinaryExp    { $1 :>=: $3 }
+     | BinaryExp '&&' BinaryExp    { $1 :&: $3 }
+     | BinaryExp '||' BinaryExp    { $1 :|: $3 }
+     | BinaryExp '+' BinaryExp     { $1 :+: $3 }
+     | BinaryExp '-' BinaryExp     { $1 :-: $3 }
+     | BinaryExp '*' BinaryExp     { $1 :*: $3 }
+     | BinaryExp '/' BinaryExp     { $1 :/: $3 }
+     | BinaryExp '%' BinaryExp     { $1 :%: $3 }
+
+UnaryExp :
+       PrimaryExp                  { $1 }
+     | '!' UnaryExp                { ENot $2 }
+
+-- Primary expressions and postfix operations
+PrimaryExp : 
+       AtomExp                     { $1 }
+     | PrimaryExp '[' Exp ']'      { EArrayAccess $1 $3 }     -- array access  
+     | PrimaryExp '.' var          { EFieldAccess $1 $3 }     -- field access
+
+AtomExp :
+       intLit                      { EValue (VInt $1) }
+     | floatLit                    { EValue (VInt (round $1)) }  -- temporary conversion
+     | stringLit                   { EValue (VString $1) }
+     | 'true'                      { EValue (VBool True) }
+     | 'false'                     { EValue (VBool False) }
+     | var                         { EVar $1 }
+     | var '(' Args ')'            { ECall $1 $3 }
+     | var '{' Args '}'            { EStructConstruct $1 $3 } -- struct construction
+     | '(' Exp ')'                 { $2 }
+
+\end{lstlisting}
 \section{Resultados e Discussão}
+
+Por mais que o resultado entregado tenha sido longe do esperado, acredito que reflete mais a minha dificuldade de desenvolver no ambiente proposto do que a minha dedicação.
 
 \subsection{Instruções de Uso}
 
+Após acessar o container docker será necessário acessar o diretório do projeto sl, em seguida rodar o Análizador Léxico Alex, depois o gerador de parse happy e por fim compilar o projeto:
+
+\begin{lstlisting}[language=bash]
+cd ./sl
+alex ./src/Frontend/Lexer/SlLexer.x
+happy ./src/Frontend/Parser/SlParser.y --ghc
+cabal build
+\end{lstlisting}
+
+Para executar o compilador:
+A execução deve ser feita a partir do executável gerado, fornecendo uma opção de uso, (=--lexer= ou =--parser=)
+
+\begin{lstlisting}[language=bash]
+./app/Main --[OPTION] ./examples/{1-6}.sl
+\end{lstlisting}
 
 \subsection{Testes Realizados}
 
-
-\subsection{Limitações}
+Todos os testes fornecidos no enunciado foram feitos, mas não é esperado que o sexto teste funcione. Todos os outros testes devem funcionar, tanto para --lexer, quanto para --parser.
 
 \section{Conclusão}
+O projeto implementou uma base forte para um compilador para a linguagem SL usando Haskell com Alex/Happy. A arquitetura modular separa claramente lexer e parser, suportando funcionalidades essenciais como funções, estruturas, arrays e estruturas de controle. O sistema oferece visualização da AST, demonstrando uma aplicação prática bem-sucedida dos conceitos fundamentais de compiladores.
 
 \section{Referências}
 
 \begin{thebibliography}{9}
+\bibitem{AlexDocumentation}
+The Alex and Happy team.
+\textit{Alex 3.4.0.1 documentation}, 2024.
+Disponível em: \url{https://haskell-alex.readthedocs.io/en/latest/}.
+Acesso em: 20 de fevereiro de 2026.
+
+\bibitem{HaskellAlexTigerExample}
+The Alex and Happy team.
+\textit{Alex example --- A lexer for the Tiger language}, 2023.
+Disponível em: \url{https://github.com/haskell/alex/blob/master/examples/tiger.x}.
+Acesso em: 20 de fevereiro de 2026.
+
+
 \bibitem{hutton2016}
 Hutton, G. (2016). \emph{Programming in Haskell}. Cambridge University Press.
 
